@@ -1,24 +1,19 @@
-import React from 'react';
-import './App.css';
+import "./App.css";
+import NavBar from "./Navbar";
+import {Outlet} from "react-router-dom";
+import React from "react";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and/or save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+interface AppProps {
+    outlet?: JSX.Element;
+}
+
+function App ({outlet}: AppProps): JSX.Element {
+    return (
+        <div className="App">
+            <NavBar />
+            { outlet ? outlet : <Outlet /> }
+        </div>
+    );
 }
 
 export default App;
