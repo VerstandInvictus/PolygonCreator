@@ -12,20 +12,32 @@ npm run build
 
 Everything is served by Flask, no React/Node run/serve commands required.
 
+If you have no `data/polygons.json` file, one will be created automatically the first time you create a polygon.
+
 ### Refreshing after changes
 If run with `flask run --debug`, changes to Python files will automatically restart the server with the changes.
 
 Seems `create-react-app` doesn't support a Webpack watch/dev mode natively. As such, `npm run build` after making changes, wait, and reload. I tried to find a quick workaround for this, 
 but no dice so far.
 
+## Linting
+
+`npm run lint` runs ESlint.
+
+Note that ESlint does run on build and will fail the build. This is a create-react-app internal default.
+
 ### Testing
 
 `npm run test` will run all React tests.
 
+I had hoped to have more tests for this, but decided to use the time on functionality instead. Given another day I could probably get them pretty comprehensive.
 
 ### Additional Frameworks/Tools:
 * https://create-react-app.dev/ - bootstrapping a skeleton for the React side.
 * https://cloudscape.design/ - component library and "sensible default" CSS. The previous version of this is AWS UI, which I've used a lot internally; it's what I'm most familiar with, so I 
   used it here to save time. This could easily be Material UI or whatever other component library, or (in a pinch) just full custom CSS with something like styled-components.
-* https://reactrouter.com/ - Page routing. We've only got two pages, but it still simplifies things pretty substantially.
-* https://typescript-eslint.io/ - linting for Typescript
+* https://reactrouter.com/ - Page routing. We've only got two pages, but it still simplifies things pretty substantially, and taking full advantage of client side routing is 
+  fast/responsive/clean.
+* https://typescript-eslint.io/ - linting for Typescript.  Not enforcing consistency on myself was gnawing at me. I've got the rules 90% conforming to a style I prefer, which is enough.
+* https://axios-http.com/ - API call handling.
+* https://konvajs.org/docs/react/Intro.html - Canvas component and handlers.

@@ -33,7 +33,7 @@ function ErrorDisplay (): JSX.Element {
     }
 
     return (
-        <Box margin="xxl" padding="xxl">
+        <Box margin="xxl">
             <Alert header={errorHeader} statusIconAriaLabel="Error" type="error">
                 <p>
                     We're sorry; something isn't working right. For diagnostic purposes, the error was:
