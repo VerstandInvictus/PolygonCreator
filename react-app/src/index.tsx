@@ -1,6 +1,8 @@
 import "./index.css";
 import "@cloudscape-design/global-styles/index.css";
-import {RouterProvider, createBrowserRouter} from "react-router-dom";
+import {apiCallerProps, polygonApiResponse} from "./Interfaces";
+import axios, {AxiosError, AxiosRequestConfig, AxiosResponse} from "axios";
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import App from "./App";
 import ErrorDisplay from "./error";
 import PolygonEditor from "./PolygonEditor";
@@ -8,26 +10,75 @@ import PolygonTable from "./PolygonTable";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
+export async function polygonApiCaller ({payload, verb, target}: apiCallerProps) : Promise<polygonApiResponse> {
+    const config: AxiosRequestConfig = {
+        data: payload || null,
+        method: verb,
+        url: target
+    };
+    try {
+        const polygonResponse: AxiosResponse = await axios.request(config);
+        return {
+            "polygons": polygonResponse.data,
+            "success": true
+        };
+    } catch (error) {
+        let errorMessage : string;
+        if (error instanceof AxiosError) {
+            errorMessage = error?.message || "Server did not provide details";
+        } else {
+            errorMessage = String(error);
+        }
+        return {
+            "error": errorMessage,
+            "polygons": [],
+            "success": false
+        };
+    }
+}
+
+export async function loadAllPolygons () : Promise<polygonApiResponse> {
+    return await polygonApiCaller({target: "/api/polygons/all", verb: "get"});
+}
+
+export async function loadSpecificPolygon (polygonId: string) : Promise<polygonApiResponse> {
+    if (polygonId === "new") {
+        // Shortcut - we know there's nothing to get, so just return an empty result.
+        return {
+            "polygons": [],
+            "success": true
+        };
+    }
+    return await polygonApiCaller({
+        target: `/api/polygons/get/${polygonId}`,
+        verb: "get"
+    });
+}
+
 const router = createBrowserRouter([
     {
-        "children": [
+        children: [
             {
-                "children": [
+                children: [
                     {
-                        "element": <PolygonTable />,
-                        "path": "/"
+                        element: <PolygonTable />,
+                        loader: loadAllPolygons,
+                        path: "/"
                     },
                     {
-                        "element": <PolygonEditor />,
-                        "path": "/edit/:polygonId"
+                        element: <PolygonEditor />,
+                        loader: async ({params}) : Promise<polygonApiResponse> => {
+                            return await loadSpecificPolygon(params.polygonId ? params.polygonId : "new");
+                        },
+                        path: "/edit/:polygonId"
                     }
                 ],
-                "path": "/"
+                path: "/"
             }
         ],
-        "element": <App />,
-        "errorElement": <App outlet={<ErrorDisplay />} />,
-        "path": "/"
+        element: <App />,
+        errorElement: <App outlet={<ErrorDisplay />} />,
+        path: "/"
     }
 ]);
 
