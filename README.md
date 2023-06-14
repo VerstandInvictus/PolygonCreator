@@ -36,6 +36,14 @@ something other than just a bunch of text fields, for variety.
     * So, if we wanted to support both types, the right thing to do would probably be to convert them to numeric in the data model, but also record what format the user chose to enter 
       them in, and display them back in that format. Or have a preference setting per-user for "how do you want your coords displayed" and use that universally, saving us the complexity 
       of recording what they used on entry.
+      
+#### Python/React split
+This ended up being a seriously frontend-heavy project. I had anticipated maybe having to do more shape handling on the backend, but React-router's client side routing and Konva's 
+canvas power made it really compelling to just do everything in the frontend. I would not normally say I'm this much of a frontend dev, and I don't want this codebase to imply that I'm 
+more comfortable in frontend - I wouldn't really describe myself as more comfortable in either place, though I would absolutely say I'm more comfortable in Python than JS or Typescript. 
+You just can't reasonably do frontend UI in Python (yet - there are always projects), so it is what it is. 
+
+In general, I would characterize myself as pretty close to 50/50 frontend/backend, and I do try to kind of stay in that balance.
 
 ### Installation
 ```
