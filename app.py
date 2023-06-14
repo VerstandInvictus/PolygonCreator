@@ -24,8 +24,12 @@ class PolygonStore:
                 with open(self._datapath, "r") as infile:
                     self.polygons = json.load(infile)
             except json.decoder.JSONDecodeError:
+                # This is for line length. there's a library to handle multiline strings better,
+                # e.g. SQL queries, but not necessary here.
+                # Realistically this would be logged and alerted on anyway.
+                print("========WARNING============\n")
                 print(
-                    "==WARNING== Unable to load polygons.json file from /data - the file was found, but may be corrupted. "
+                    "Unable to load polygons.json file from /data - the file was found, but may be corrupted."
                 )
 
     def _save_polygons_to_file(self):
@@ -41,11 +45,11 @@ class PolygonStore:
         # For simplicity, we can use the same function to edit and create records.
         # In a real use case we might want to be more intentional and edit specific fields,
         # but for simple MVP tasks this is clean/straightforward.
-        if not polygon_data.get('polygonId'):
+        if not polygon_data.get("polygonId"):
             # this is a new polygon, assign a UUID
             polygon_id = str(uuid.uuid4())
-            polygon_data['polygonId'] = polygon_id
-        self.polygons[polygon_data['polygonId']] = polygon_data
+            polygon_data["polygonId"] = polygon_id
+        self.polygons[polygon_data["polygonId"]] = polygon_data
         # update the datastore immediately in case of interruption
         self._save_polygons_to_file()
         return polygon_data
@@ -57,39 +61,39 @@ class PolygonStore:
 polygon_store = PolygonStore()
 
 # this lets us serve everything from Flask, straight out of the React build folder
-app = Flask(__name__, static_folder='react-app/build/static', template_folder='react-app/build')
+app = Flask(
+    __name__, static_folder="react-app/build/static", template_folder="react-app/build"
+)
 
 
-@app.route('/')
-@app.route('/<path:path>')
+@app.route("/")
+@app.route("/<path:path>")
 def render_react_page(path=None):
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/static/<path:path>')
+@app.route("/static/<path:path>")
 def serve_react_files(path):
-    return send_from_directory('static', path)
+    return send_from_directory("static", path)
 
 
-@app.route('/api/polygons/all')
+@app.route("/api/polygons/all")
 def get_all_polygons():
     return jsonify(list(polygon_store.polygons.values()))
 
 
-@app.route('/api/polygons/get/<polygon_id>')
+@app.route("/api/polygons/get/<polygon_id>")
 def get_specific_polygon(polygon_id):
-    return jsonify(polygon_store.get_specific_polygon(polygon_id))
+    # wrap in a list to match the type React is expecting
+    return jsonify([polygon_store.get_specific_polygon(polygon_id)])
 
 
-@app.route('/api/polygons/save', methods=["POST"])
+@app.route("/api/polygons/save", methods=["POST"])
 def save_polygon():
     polygon_data = request.json
     polygon_store.store_polygon(polygon_data)
-    return jsonify({
-        "result": "success",
-        "data": polygon_data
-    })
+    return jsonify({"result": "success", "data": polygon_data})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()

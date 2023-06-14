@@ -20,14 +20,17 @@ If run with `flask run --debug`, changes to Python files will automatically rest
 Seems `create-react-app` doesn't support a Webpack watch/dev mode natively. As such, `npm run build` after making changes, wait, and reload. I tried to find a quick workaround for this, 
 but no dice so far.
 
-## Linting
+If the Flask server is accessed while NPM is building, it will throw TemplateNotFound, since NPM deletes the old build. This could be caught, but realistically it would never occur in a 
+real prod pipeline.
 
+## Linting
 `npm run lint` runs ESlint.
+`flake8` runs Flake8.
+`black app.py` runs Black in autoformat mode. `black -diff app.py` will show what it's going to do.
 
 Note that ESlint does run on build and will fail the build. This is a create-react-app internal default.
 
 ### Testing
-
 `npm run test` will run all React tests.
 
 I had hoped to have more tests for this, but decided to use the time on functionality instead. Given another day I could probably get them pretty comprehensive.
@@ -41,3 +44,5 @@ I had hoped to have more tests for this, but decided to use the time on function
 * https://typescript-eslint.io/ - linting for Typescript.  Not enforcing consistency on myself was gnawing at me. I've got the rules 90% conforming to a style I prefer, which is enough.
 * https://axios-http.com/ - API call handling.
 * https://konvajs.org/docs/react/Intro.html - Canvas component and handlers.
+* https://flake8.pycqa.org/en/latest/index.html#quickstart - standard Python linter.
+* https://black.readthedocs.io/en/stable/index.html - Python autoformatter/opinonated linter.

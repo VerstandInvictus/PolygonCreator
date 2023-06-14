@@ -41,6 +41,7 @@ module.exports = {
         "react/jsx-newline": "off",
         "react/jsx-max-depth": "off",
         "react/jsx-max-props-per-line": "off",
+        "react/jsx-props-no-spreading": "off",
         // As long as the file isn't huge, and they're thematically connected, better readability with multicomp
         "react/no-multi-comp": "off",
         "react/no-unescaped-entities": "off", // template literals
