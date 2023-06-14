@@ -39,31 +39,42 @@ function PolygonEditor (): JSX.Element {
     let headerText = "Create New Polygon";
 
     useEffect(() => {
+        // Initial setup of the component on first render/mount
         if (!success) {
             setErrorVisible(true);
             setErrorText(error);
-        }
-        if (!["", undefined].includes(polygon?.name)) {
-            headerText = `${polygon.name} - View/Edit`;
-            setIsClosed(polygon.isClosed);
-            setPolygonIdValue(polygon.polygonId || "");
-            setPoints(polygon.points);
-            setNameValue(polygon.name);
-            setIsGeoValue(polygon.isGeographical || false);
-            setNotesValue(polygon.notes || "");
-            setCentroidLatValue(polygon.centroid?.latitude.toString() || null);
-            setCentroidLongValue(polygon.centroid?.longitude.toString() || null);
         } else {
-            setPolygon({
-                isClosed: false,
-                isGeographical: false,
-                name: "",
-                points: []
-            });
+            setErrorVisible(false);
+            setErrorText("");
+        }
+        if (polygons !== undefined) {
+            const [currentPolygon] = polygons;
+            if (!(["", undefined].includes(currentPolygon?.name))) {
+                // We're editing a polygon that already exists - set up our fields with its data
+                headerText = `${currentPolygon.name} - View/Edit`;
+                setPolygon(currentPolygon);
+                setIsClosed(currentPolygon.isClosed);
+                setPolygonIdValue(currentPolygon.polygonId || "");
+                setPoints(currentPolygon.points);
+                setNameValue(currentPolygon.name);
+                setIsGeoValue(currentPolygon.isGeographical || false);
+                setNotesValue(currentPolygon.notes || "");
+                setCentroidLatValue(currentPolygon.centroid?.latitude.toString() || null);
+                setCentroidLongValue(currentPolygon.centroid?.longitude.toString() || null);
+            } else {
+                // We're creating a new polygon, set minimal blank data up
+                setPolygon({
+                    isClosed: false,
+                    isGeographical: false,
+                    name: "",
+                    points: []
+                });
+            }
         }
     }, []);
 
     useEffect(() => {
+        // This handles reflecting state changes from PolygonCanvas
         if (!["", undefined].includes(polygon?.name)) {
             polygon.isClosed = isClosed;
             polygon.points = points;
@@ -72,10 +83,12 @@ function PolygonEditor (): JSX.Element {
     }, [points, isClosed]);
 
     function validatePolygonData () : false | polygonData {
+        // Validate that we have a polygon that can be saved, and assemble the data if so.
         let validated = true;
         let centroid = null;
 
         if (points.length === 0) {
+            // There are no points on the canvas
             setPointsValidationErrorVisible(true);
             validated = false;
         } else {
@@ -88,19 +101,22 @@ function PolygonEditor (): JSX.Element {
             setNameValidationError("");
         }
         if (isGeoValue) {
+            // Only validate geo-related fields if the isGeo field itself is checked
             setCentroidValidationError("");
             if (!(centroidLatValue && centroidLongValue)) {
+                // One or both of the centroid coordinates was not supplied
                 validated = false;
                 setCentroidValidationError(
                     `If this is a geographical shape, you
                     must provide numerical centroid coordinates.`
                 );
             } else if ([Number(centroidLongValue), Number(centroidLatValue)].includes(NaN)) {
+                // One or both of the centroid coordinate fields casts to NaN, i.e. it's got non-numeric chars in it
                 validated = false;
                 setCentroidValidationError(
                     `Your coordinates include non-numeric data. 
                     Please provide them in numeric format.`
-                )
+                );
             } else {
                 // I wanted these to be typed number throughout the component, but that caused a
                 // UI bug where the onChange function for the field was deleting "-" if it was the
@@ -112,6 +128,7 @@ function PolygonEditor (): JSX.Element {
                 };
             }
         } else if (centroidLatValue || centroidLongValue) {
+            // We also want to reject if there's a centroid, but the isGeo field is not checked.
             validated = false;
             setCentroidValidationError(
                 `You have entered centroid coordinates, 
@@ -148,6 +165,7 @@ function PolygonEditor (): JSX.Element {
             {payload: validatedPayload, target: "/api/polygons/save", verb: "post"}
         );
         if (saveResponse.success) {
+            // As specified in the design, successful save should navigate to the table of all polygons.
             navigate("/");
         } else {
             setErrorVisible(true);
@@ -158,6 +176,7 @@ function PolygonEditor (): JSX.Element {
     function clearAllFields () {
         setErrorText("");
         setErrorVisible(false);
+        setNameValidationError("");
         setPointsValidationErrorVisible(false);
         setNameValue("");
         setNotesValue("");
@@ -168,6 +187,9 @@ function PolygonEditor (): JSX.Element {
     }
 
     return (
+        // This component got very long with all the inputs, validation handling, state, etc.
+        // I'd probably refactor the input fields out into their own component and pass state into it using
+        // useContext so that we're not passing a dozen useState getters and setters around.
         <Box margin="xxl">
             <Header variant="h2">
                 {headerText}
@@ -224,17 +246,10 @@ function PolygonEditor (): JSX.Element {
                     }
                     >
                         <Form>
+                            {/* With some effort, this could use react-router Actions and HTML forms,
+                             instead of the Axios AJAX call I actually use in savePolygon, but handling
+                             the points array presents challenges there, so I've gone with what works */}
                             <SpaceBetween direction="vertical" size="l">
-                                <FormField
-                                    description="The internal ID for this polygon."
-                                    label="Polygon Name"
-                                >
-                                    <Input
-                                        name="polygonId"
-                                        readOnly={true}
-                                        value={polygonIdValue}
-                                    />
-                                </FormField>
                                 <FormField
                                     constraintText="Required field. Good names are descriptive, brief, and unique."
                                     description="Enter a name for this polygon."
@@ -242,21 +257,20 @@ function PolygonEditor (): JSX.Element {
                                     label="Polygon Name"
                                 >
                                     <Input
-                                        name="name"
                                         onChange={({detail}) => setNameValue(detail.value)}
                                         value={nameValue}
                                     />
                                 </FormField>
                                 <FormField
-                                    description="Does this polygon represent a geographical shape?"
                                     label="Geographical"
                                     stretch={true}
                                 >
                                     <Checkbox
                                         checked={isGeoValue}
-                                        name="is_geographical"
                                         onChange={({detail}) => setIsGeoValue(detail.checked)}
-                                    />
+                                    >
+                                        "Does this polygon represent a geographical shape?"
+                                    </Checkbox>
                                 </FormField>
                                 <FormField
                                     constraintText="Required if Geographical is set. Must be in numeric format."
@@ -268,7 +282,6 @@ function PolygonEditor (): JSX.Element {
                                     label="Centroid Latitude"
                                 >
                                     <Input
-                                        name="centroid_lat"
                                         onChange={({detail}) => setCentroidLatValue(detail.value)}
                                         value={centroidLatValue || ""}
                                     />
@@ -289,7 +302,6 @@ function PolygonEditor (): JSX.Element {
                                     label="Notes"
                                 >
                                     <Textarea
-                                        name="notes"
                                         onChange={({detail}) => setNotesValue(detail.value)}
                                         value={notesValue}
                                     />

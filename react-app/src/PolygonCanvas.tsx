@@ -5,7 +5,7 @@ import Konva from "konva";
 import md5 from "blueimp-md5";
 import {Vector2d} from "konva/lib/types";
 
-function getLine (points: Array<point>): Array<number> {
+export function getLine (points: Array<point>): Array<number> {
     // Konva requires flat arrays to draw a line - [x1, y1, x2, y2, x3, y3 ...]
     return points.map((p: point) => [p.x, p.y]).flat();
 }
@@ -29,16 +29,20 @@ function detectProximity (p: point, pointerPos: Vector2d): boolean {
 
 export function PolygonCanvas ({points, setPoints, isClosed, setIsClosed}: CanvasProps): JSX.Element {
     const [linePoints, setLinePoints] = useState<Array<number>>([]);
-    const [newPointLockout, setNewPointLockout] = useState(false);
     const stageRef = useRef<Konva.Stage>(null);
 
     useEffect(() => {
+        // Update our line between the points whenever there's a change to the points
         if (typeof points !== "undefined") {
             setLinePoints(getLine(points));
         }
     }, [points]);
 
     function handleDragMove (evt: Konva.KonvaEventObject<DragEvent>) {
+        // If a point in the canvas is being dragged, we need to update the underlying
+        // point array that we're using for the line and passing up to the save function.
+        // We do that by reading the point's ID off the Circle element, finding the corresponding
+        // point value in the array, and updating it to match the dragged position.
         if (stageRef.current === null) {
             return;
         }
@@ -55,14 +59,19 @@ export function PolygonCanvas ({points, setPoints, isClosed, setIsClosed}: Canva
     }
 
     function pointClickHandler (evt: Konva.KonvaEventObject<PointerEvent>) {
+        // Create new points in the underlying point array when the user clicks on the canvas.
+        // These will appear as Circle elements in the canvas, through the magic of useState
+        // and the map in the canvas stage code below.
         if (stageRef.current === null) {
             return;
         }
         const pointerPos: Vector2d | null = stageRef.current.getPointerPosition();
         if (pointerPos !== null) {
-            if (!(newPointLockout || isClosed)) {
+            if (!(isClosed)) {
+                // Let's make the first point a little easier to click, for closing the polygon.
+                // Anything a few dozen pixels around it counts as clicking on it.
+                // This avoids obnoxious close-overlapping points on top of it.
                 if (detectProximity(points[0], pointerPos)) {
-                    setNewPointLockout(true);
                     setIsClosed(true);
                 } else {
                     const newPoints = [...points, getPoint(pointerPos)];
@@ -74,6 +83,7 @@ export function PolygonCanvas ({points, setPoints, isClosed, setIsClosed}: Canva
     }
 
     function eventFilter (evt: Konva.KonvaEventObject<any>) {
+        // See the note below in the return block for why we need this.
         const eventTargetId = evt.target.attrs.id;
         if (eventTargetId === points[0].pointId && evt.evt.type === "pointerdown") {
             pointClickHandler(evt);

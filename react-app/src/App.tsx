@@ -1,4 +1,5 @@
 import "./App.css";
+import Container from "@cloudscape-design/components/container";
 import NavBar from "./Navbar";
 import {Outlet} from "react-router-dom";
 import React from "react";
@@ -11,7 +12,9 @@ function App ({outlet}: AppProps): JSX.Element {
     return (
         <div className="App">
             <NavBar />
-            { outlet ? outlet : <Outlet /> }
+            <Container>
+                { outlet ? outlet : <Outlet /> }
+            </Container>
         </div>
     );
 }

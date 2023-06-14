@@ -11,6 +11,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 export async function polygonApiCaller ({payload, verb, target}: apiCallerProps) : Promise<polygonApiResponse> {
+    // All API calls in the app are done from here, whether they're react-router Loaders or direct calls.
     const config: AxiosRequestConfig = {
         data: payload || null,
         method: verb,
@@ -58,6 +59,7 @@ export async function loadSpecificPolygon (polygonId: string) : Promise<polygonA
 const router = createBrowserRouter([
     {
         children: [
+            // This double-nested structure allows errors everywhere, including 404, to be caught by react-router
             {
                 children: [
                     {
@@ -77,6 +79,7 @@ const router = createBrowserRouter([
             }
         ],
         element: <App />,
+        // Errors get kicked to this version of the page, which keeps the navbar present for them to go back
         errorElement: <App outlet={<ErrorDisplay />} />,
         path: "/"
     }
